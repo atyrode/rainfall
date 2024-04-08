@@ -32,10 +32,10 @@ $
 Il ne se passe rien. J'imagine que comme le level0, il faut passer la bonne string. J'analyse le programme au travers de GDB :
 
 ```
-$ gdb ./level1
+$ gdb level1
 (gdb) disas main
 Dump of assembler code for function main:
-   0x08048480 <+0>:     push   %ebp
+   0x08048480 <+0>:     push   %ebp    
    0x08048481 <+1>:     mov    %esp,%ebp
    0x08048483 <+3>:     and    $0xfffffff0,%esp
    0x08048486 <+6>:     sub    $0x50,%esp

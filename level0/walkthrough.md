@@ -33,7 +33,8 @@ No !
 Je tente d'analyser le binaire avec GDB :
 
 ```
-$ gdb level0 42
+$ gdb level0
+disas main
 ...
    0x08048ed4 <+20>:    call   0x8049710 <atoi>
    0x08048ed9 <+25>:    cmp    $0x1a7,%eax
@@ -59,6 +60,15 @@ $ cat /home/user/level1/.pass
 1fe8a524fa4bec01ca4ea2a869af2a02260d4a7d5fe7e7c24d8617e6dca12d3a
 ```
 
+### Flag
+`whoami` should now show `level1`, which means we're ready to get the flag.
+
+`cat /home/user/level1/.pass`
+
+We can now directly `su` or `ssh` into the `level1` user with the password:
+
+`1fe8a524fa4bec01ca4ea2a869af2a02260d4a7d5fe7e7c24d8617e6dca12d3a`
+
 Pour reconstruire le binaire exploité dans le source, je note les choses suivante dans l'analyse GDB ainsi que dans le fonctionnement du binaire :
 
 - Segfault/fail sans argument
@@ -83,4 +93,4 @@ J'en déduis donc également :
 - [Que le programme se met le gid et l'uid récupéré](https://manpages.ubuntu.com/manpages/xenial/fr/man2/setresgid.2.html)
 - J'imagine que le call execv est la partie qui lance le shell pour accèder au flag du level01
 
-Je vais donc écrire un fichier python qui imite le binaire exploité.
+Je vais donc écrire un fichier C qui imite le binaire exploité.
