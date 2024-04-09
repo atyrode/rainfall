@@ -1,4 +1,6 @@
-void p()
+#include <stdio.h>
+
+void p(void)
 {
   uint unaff_retaddr;
   char buffer[76];
@@ -6,8 +8,7 @@ void p()
   fflush(stdout);
   gets(buffer);
   if ((unaff_retaddr & 0xb0000000) == 0xb0000000) {
-    printf("(%p)\n",unaff_retaddr);
-                    /* WARNING: Subroutine does not return */
+    printf("(%p)\n", unaff_retaddr);
     _exit(1);
   }
   puts(buffer);
@@ -15,4 +16,7 @@ void p()
   return;
 }
 
-int main() { v(); return 0;}
+void main(void) {
+  p();
+  return;
+}
