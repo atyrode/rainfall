@@ -16,4 +16,7 @@ void v(void)
   return;
 }
 
-int main() { v(); return 0}
+void main() { 
+    v(); 
+    return;
+}
