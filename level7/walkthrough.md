@@ -113,10 +113,6 @@ Ces deux décompilations me semblent un peu obscure, je regarde d'autre décompi
 #include <stdlib.h>
 #include <string.h>
 
-struct _IO_FILE {
-    int32_t e0;
-};
-
 char * g1; // 0x8049960
 
 int main(int argc, char ** argv) {
