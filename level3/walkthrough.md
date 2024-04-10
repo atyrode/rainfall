@@ -88,7 +88,7 @@ Il me faut donc, dans l'espace qui m'est fourni par le buffer et la limite de `f
 Pour cela, je dois composer un payload infecté composé de :
 
 - l'adresse de la variable `m` dans la fonction `v()`
-- 64 charactères à écrire que %n va utiliser pour écrire le pointeur
+- 64 caractères à écrire que %n va utiliser pour écrire le pointeur
 - puis l'appel à `%n`
 
 Etant donné que nous ne passons aucun argument à `printf`, ce dernier va lire la stack comme argument. Pour trouver "où" se trouve le pointeur de la variable `m` dans la stack pour `printf` lorsque je lui passe l'adresse de `m`, j'utilise l'astuce suivante :
