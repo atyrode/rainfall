@@ -111,7 +111,7 @@ Cela m'indique que l'appel à `%n` nécessitera un 'shift' de 4 (écrit: `%4$n`)
 python -c 'print("\x08\x04\x98\x8c"[::-1] + "\x90"*60 + "%4$n"
 ```
 
-Note: vu que je fais un shift de 4 bytes, je n'ai donc que 60 à écrire avant pour atteindre le total de 64 bytes, et ce sera la valeur écrite donc dans le "4eime" (1er dans printf) argument, qui pointe donc sur : `0x0804988c`
+Note: vu que j'écris déjà 4 bytes pour l'adresse de 'm', je n'ai donc que 60 à écrire avant pour atteindre le total de 64 bytes, et ce sera la valeur écrite donc dans le "4eime" (1er dans printf) argument, qui pointe donc sur : `0x0804988c`
 
 Cette adresse est trouvée en utilisant `gdb` :
 
