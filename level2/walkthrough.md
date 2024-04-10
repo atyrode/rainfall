@@ -29,10 +29,9 @@ da
 da
 ```
 
-Je décide à partir de ce niveau d'utiliser les logiciels de décompilation présent sur [Dogbolt](https://dogbolt.org/).
+Je décide à partir de ce niveau d'utiliser les logiciels de décompilation présent sur [Dogbolt](https://dogbolt.org/?id=4128e95e-4279-47df-81a9-a69c5f209d01).
 
-En lui passant le binaire au préalable téléchargé, `Ghidra` me procure le code 
-suivant :
+En lui passant le binaire au préalable téléchargé, `Ghidra` me procure le code suivant :
 
 ```c
 void p() {
