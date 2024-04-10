@@ -112,11 +112,11 @@ Afin de construire un payload infecté, il me faut calculer la distance entre ce
 ```
 $ ltrace ./level6 da
 __libc_start_main(0x804847c, 2, 0xbffff7f4, 0x80484e0, 0x8048550 <unfinished ...>
-malloc(64)                                                                = 0x0804a008
-malloc(4)                                                                 = 0x0804a050
-strcpy(0x0804a008, "da")                                                  = 0x0804a008
+malloc(64)                  = 0x0804a008 <-- ici
+malloc(4)                   = 0x0804a050 <-- ici
+strcpy(0x0804a008, "da")    = 0x0804a008
 puts("Nope"Nope
-)                                                              = 5
+)                           = 5
 +++ exited (status 5) +++
 ```
 
