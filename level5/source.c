@@ -1,14 +1,21 @@
-void __noreturn o()
+#include <stdlib.h>
+#include <stdio.h>
+
+void o(void)
 {
-  system("/bin/sh");
-  _exit(1);
+    system("/bin/sh");
+    _exit(1);
 }
 
-void __noreturn n()
+void n(void)
 {
-  char s[520]; // [esp+10h] [ebp-208h] BYREF
+    char buffer[512];
+    fgets(buffer, 512, stdin);
+    printf(buffer);
+    exit(1);
+}
 
-  fgets(s, 512, stdin);
-  printf(s);
-  exit(1);
+int main(void)
+{
+    n();
 }
