@@ -106,7 +106,18 @@ int main(int argc, char **argv)
 }
 ```
 
-Il semblerait que la solution de ce niveau soit qu'`argv[1] == "423"`, j'essaye donc : 
+Il semblerait que la solution de ce niveau soit qu'`argv[1] == "423"` si l'on se fie à cette condition :
+
+```c
+if (atoi(argv[1]) == 423)
+{
+    sh_path = strdup("/bin/sh");
+    ...
+    execv("/bin/sh", &sh_path);
+}
+```
+
+J'essaye donc : 
 
 ```
 $ ./level0 423
