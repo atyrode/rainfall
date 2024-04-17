@@ -1,6 +1,6 @@
 Je commence par découvrir qui je suis, où je suis, et qu'est-ce qui est à ma disposition :
 
-```
+```bash
 $ id && pwd && ls -la
 uid=2020(level0) gid=2020(level0) groups=2020(level0),100(users)
 /home/user/level0
@@ -15,14 +15,14 @@ dr-x--x--x  1 root   root      340 Sep 23  2015 ..
 
 Je tente de lancer le binaire level0 :
 
-```
+```bash
 $ ./level0
 Segmentation fault (core dumped)
 ```
 
 Puis avec un/des arguments :
 
-```
+```bash
 $ ./level0 a
 No !
 
@@ -119,7 +119,7 @@ if (atoi(argv[1]) == 423)
 
 J'essaye donc : 
 
-```
+```bash
 $ ./level0 423
 $ cat /home/user/level1/.pass
 1fe8a524fa4bec01ca4ea2a869af2a02260d4a7d5fe7e7c24d8617e6dca12d3a
