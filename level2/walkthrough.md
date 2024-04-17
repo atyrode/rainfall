@@ -1,6 +1,6 @@
 Je commence par découvrir qui je suis, où je suis, et qu'est-ce qui est à ma disposition :
 
-```
+```bash
 $ id && pwd && ls -la
 uid=2021(level2) gid=2021(level2) groups=2021(level2),100(users)
 /home/user/level2
@@ -16,7 +16,7 @@ dr-x--x--x  1 root   root    340 Sep 23  2015 ..
 
 Je tente de lancer le binaire level2 :
 
-```
+```bash
 $ ./level2
 (waiting for input)
 $ ./level2
