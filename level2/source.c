@@ -1,23 +1,22 @@
-#include <stdio.h>
+void p()
+{
+    fflush(stdout);
 
-void    p() {
-  char buffer[64];
-  int retaddr;
+    int buffer[16];
+    gets(buffer);
 
-  fflush(stdout);
-  gets(buffer);
-  retaddr = *((int*)(&buffer + 80));
-  if ( (retaddr & 0xb0000000) == 0xb0000000 ) {
-    printf("(%p)\n", retaddr);
-    exit(1);
-  }
-  puts(buffer);
-  strdup(buffer);
-  return;
+    int check = buffer[20];
+    if ((check & 0xb0000000) == 0xb0000000)
+    {
+        printf("(%p)\n", check);
+        exit(1);
+    }
+
+    puts(buffer);
+    strdup(buffer);
 }
 
-int	main()
+int main()
 {
-	p();
-	return (0);
+    p();
 }
