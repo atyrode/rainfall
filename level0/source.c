@@ -2,18 +2,15 @@ int main(int argc, char **argv)
 {
     char *sh_path;
 
-    __uid_t u_id;
-    __gid_t g_id;
-
     if (atoi(argv[1]) == 423)
     {
         sh_path = strdup("/bin/sh");
 
-        g_id = getegid();
-        u_id = geteuid();
+        gid_t gid = getegid();
+        uid_t uid = geteuid();
 
-        setresgid(g_id, g_id, g_id);
-        setresuid(u_id, u_id, u_id);
+        setresgid(gid, gid, gid);
+        setresuid(uid, uid, uid);
         
         execv("/bin/sh", &sh_path);
     }
@@ -21,5 +18,6 @@ int main(int argc, char **argv)
     {
         fwrite("No !\n", 1, 5, stderr);
     }
+
     return 0;
 }
