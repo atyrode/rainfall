@@ -1,18 +1,17 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-struct user {
+struct s_user {
     int id;
     char login[28];
-    int authenticated;
+    int is_auth;
 };
 
 int *service;
-struct user *user; 
 
-int main() {
-    while (1) {
+struct s_user *user;
+
+int main()
+{
+    while (1)
+    {
         printf("%p, %p \n", user, service);
 
         char buffer[128];
@@ -20,7 +19,8 @@ int main() {
         if (!(fgets(buffer, 128, stdin)))
             break;
 
-        if (!(strncmp(buffer, "auth ", 5))) {
+        if (!(strncmp(buffer, "auth ", 5)))
+        {
             user = malloc(4);
             user->id = 0;
 
@@ -34,8 +34,9 @@ int main() {
         if (!(strncmp(buffer, "service", 6)))
             service = strdup(buffer + 7);
 
-        if (!(strncmp(buffer, "login", 5))) {
-            if (user->authenticated)
+        if (!(strncmp(buffer, "login", 5)))
+        {
+            if (user->is_auth)
                 system("/bin/sh");
             else
                 fwrite("Password:\n", 1, 10, stdout);
