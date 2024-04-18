@@ -1,8 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
-#include <string.h>
-
 struct file {
     int id;
     void *ptr;
@@ -17,21 +12,23 @@ void m() {
 
 int main(int argc, char **argv)
 {
-    struct file *buf1;
-    struct file *buf2;
+    struct file *buffer1;
+    struct file *buffer2;
 
-    buf1 = malloc(8);
-    buf1->id = 1;
-    buf1->ptr = malloc(8);
+    buffer1 = malloc(8)
+    buffer1->id = 1;
+    buffer1->ptr = malloc(8);
 
-    buf2 = malloc(8);
-    buf2->id = 2;
-    buf2->ptr = malloc(8);
+    buffer2 = malloc(8);
+    buffer2->id = 2;
+    buffer2->ptr = malloc(8);
 
-    strcpy(buf2->ptr, argv[1]);
-    strcpy(buf2->ptr, argv[2]);
+    strcpy(buffer2->ptr, argv[1]);
+    strcpy(buffer2->ptr, argv[2]);
 
     fgets(string, 68, fopen("/home/user/level8/.pass", "r"));
+
     puts("~~");
+    
     return 0;
 }
