@@ -30,13 +30,14 @@ Je recoupe l'analyse ASM du binaire avec GDB des résultats obtenus sur [Dogbolt
 void run(void)
 {
     fwrite("Good... Wait what?\n", 1, 19, stdout);
-    system("/bin/sh");
+    system("/bin/sh"); // <--------------------4 shell access
 }
 
 int main(void)
 {
-    char buffer[64];
-    gets(buffer);
+    char buffer[64]; // <-----------------------1 buffer declared with 64 bytes
+    gets(buffer);  // <-------------------------2 user input stored in buffer but without size check = overflow = arbitrary return address exploit
+    return 0; // <------------------------------3 return address changed to run()
 }
 ```
 

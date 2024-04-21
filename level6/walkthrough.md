@@ -26,7 +26,7 @@ Nope
 Je recoupe l'analyse ASM du binaire avec GDB des résultats obtenus sur [Dogbolt](https://dogbolt.org/?id=bf99b17b-f29d-4c51-9cac-5055972d80ea) et en extrait une version probable du code :
 
 ```c
-void n()
+void n() // <-----------------------------------4 shell access
 {
     system("/bin/cat /home/user/level7/.pass");
 }
@@ -41,12 +41,12 @@ int main(int argc, char **argv)
     int *buffer;
     void (**funcptr)(void);
 
-    buffer = (char *)malloc(64);
+    buffer = (char *)malloc(64); // <-----------1 dealing with heap here due to malloc, so we use ltrace instead of gdb
     funcptr = (void (**)(void))malloc(4);
 
     *funcptr = m;
-    strcpy(buffer, argv[1]);
-    (*funcptr)();
+    strcpy(buffer, argv[1]); // <---------------2 buffer overflows here, can be used to rewrite to what the funcptr (next to buffer in the heap) points to
+    (*funcptr)(); // <--------------------------3 once corrupted, points to n() and not m() anymore
 }
 ```
 
@@ -98,7 +98,7 @@ End of assembler dump.
 L'adresse de `n()` est : `0x08048454`.
 
 Il ne me reste donc plus qu'à construire le payload.
-Ce dernier aura pour but de remplir le buffer alloué dans la `heap` pour string, ajouter du bruit jusqu'atteindre l'endroit dans la `heap` où est écrit l'adresse de ce sur quoi pointe le pointeur sur fonction (pour le moment `m()`) et remplacer cette dernière par l'adresse de `n()`.
+Ce dernier aura pour but de remplir le buffer alloué dans la `heap` pour buffer, ajouter du bruit jusqu'atteindre l'endroit dans la `heap` où est écrit l'adresse de ce sur quoi pointe le pointeur sur fonction (pour le moment `m()`) et remplacer cette dernière par l'adresse de `n()`.
 
 De manière similaire au précedents level, voici le payload qui exploite cette vulnérabilité :
 

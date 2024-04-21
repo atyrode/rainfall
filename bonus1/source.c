@@ -1,7 +1,7 @@
 int main(int argc, char **argv)
 {
-    int result;
     char buffer[40];
+    int result;
 
     result = atoi(argv[1]);
     if (result > 9)

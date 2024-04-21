@@ -52,21 +52,21 @@ void greetuser(char *string)
         break;
     }
 
-    strcat(buffer, string);
+    strcat(buffer, string); // <----------------4 the new buffer of 64 appends our 72 bytes buffer so overflows, can be used to Ret2Libc
     puts(buffer);
 }
 
 int main(int argc, char **argv)
 {
-    char buffer[76];
+    char buffer[76]; // <-----------------------1 76 bytes buffer declared
     char *ret;
 
     if (argc != 3)
         return 1;
 
     memset(buffer, 0, 76);
-    strncpy(buffer, argv[1], 40);
-    strncpy(buffer + 40, argv[2], 32);
+    strncpy(buffer, argv[1], 40); // <----------2 filled with 40
+    strncpy(buffer + 40, argv[2], 32); // <-----3 then 32 bytes (72, not overflown yet)
 
     ret = getenv("LANG");
     if (ret != 0)

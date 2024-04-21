@@ -31,7 +31,7 @@ int m;
 
 void p(char *buffer)
 {
-    printf(buffer);
+    printf(buffer); // <------------------------1 format string vulnerability, we have to rewrite m to be 16930116
 }
 
 void n(void)
@@ -40,9 +40,9 @@ void n(void)
     fgets(buffer, 512, stdin);
 
     p(buffer);
-    if (m == 16930116)
+    if (m == 16930116) // <----------------------2 using %16930116p we can pad by that amount and then use %n to alter the value of m
         system("/bin/cat /home/user/level5/.pass");
-}
+} // <-------------------------------------------3 and get shell access above
 
 int main(void)
 {

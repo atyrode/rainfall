@@ -33,12 +33,12 @@ void v()
 {
     char buffer[512];
     fgets(buffer, 512, stdin);
-    printf(buffer);
+    printf(buffer); // <------------------------1 format string vulnerability, reads user input but no args is provided, %n lets us rewrite a pointer's value
 
-    if (m == 64)
+    if (m == 64) // <---------------------------2 we rewrite the value of m to be 64
     {
         fwrite("Wait what?!\n", 1, 12, stdout);
-        system("/bin/sh");
+        system("/bin/sh"); // <-----------------3 we get shell access
     }
 }
 

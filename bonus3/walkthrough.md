@@ -43,14 +43,14 @@ int main(int ac, char **av)
         return -1;
 
     fread(buffer, 1, 66, file);
-    buffer[65] = 0;
-    buffer[atoi(av[1])] = 0;
+    buffer[65] = 0; // <------------------------1 buffer variable filled with the .pass content
+    buffer[atoi(av[1])] = 0; // <---------------3 user input places a null terminator with atoi(), atoi defaults to 0 on invalid input
 
     fread(buffer + 66, 1, 65, file);
     fclose(file);
 
-    if (strcmp(buffer, av[1]) == 0)
-        execl("/bin/sh", "sh", 0);
+    if (strcmp(buffer, av[1]) == 0) // <---------2 making the buffer equates to user input gives shell access
+        execl("/bin/sh", "sh", 0); // <----------4 giving "" (empty string) null terminates the index 0, making this comparison (user input =? buffer) be ("" ?= "")
     else
         puts(buffer + 66);
 

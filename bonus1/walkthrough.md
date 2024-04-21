@@ -32,16 +32,17 @@ Je recoupe la sortie de `RetDec` avec l'ASM et en extrait le probable code suiva
 ```c
 int main(int argc, char **argv)
 {
-    int result;
     char buffer[40];
+    int result;
 
-    result = atoi(argv[1]);
+    result = atoi(argv[1]); // <----------------1 user input to int, can't be above nine, but could be negative int overflown by multiplication
     if (result > 9)
         return 1;
-
+    
+    // <----------------------------------------2 below, user input is used to write memory allowing for overflow since len is multiplied by 4
     memcpy(buffer, argv[2], (size_t)result << 2);
-    if (result == 0x574f4c46)
-        execl("/bin/sh", "sh", 0);
+    if (result == 0x574f4c46) // <--------------3 overflow rewrites the value of result here and allows passing the check
+        execl("/bin/sh", "sh", 0); // <---------4 to shell access
 
     return 0;
 }
@@ -83,7 +84,7 @@ Je dois donc créer un payload avec la structure suivante : `un nombre négatif 
 
 En augmentant la valeur de l'INT_MIN jusqu'à `-2147483637`, dont la représentation binaire est `10000000000000000000000000001011`, et le left-bit shift de 2 résultant en : `00000000000000000000000000101100`, équivaut à 44.
 
-Ce qui est un overflow de 4 bytes, ce qui est juste assez pour insérer la nouvelle valeur de l'int dans l'overflow.
+Ce qui est un overflow de 4 bytes, ce qui est juste assez pour insérer la nouvelle valeur de l'int dans l'overflow, en d'autres termes, l'overflow écrira sur la zone mémoire de l'int `result` et changera donc sa valeur.
 
 Je peux donc construire mon payload :
 

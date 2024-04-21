@@ -29,7 +29,7 @@ Je recoupe l'analyse ASM du binaire avec GDB des résultats obtenus sur [Dogbolt
 ```c
 void o()
 {
-    system("/bin/sh");
+    system("/bin/sh"); // <---------------------3 shell access
 
     _exit(1);
 }
@@ -39,9 +39,9 @@ void n()
     char buffer[512];
 
     fgets(buffer, 512, stdin);
-    printf(buffer);
+    printf(buffer); // <------------------------1 format string vulnerability, we use a Ret2plt exploit to alter where the PLT of exit() points to
 
-    exit(1);
+    exit(1); // <-------------------------------2 write the address of o() as the PLT of exit(), so o() is called here
 }
 
 int main()

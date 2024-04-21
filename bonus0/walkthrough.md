@@ -33,14 +33,14 @@ Je recoupe la sortie de `RetDec` avec l'ASM et en extrait le probable code suiva
 ```c
 unsigned short *a = 32;
 
-void p(char *string, char *string2)
+void p(char *string, char *string2) // <--------1 received string, 20 bytes buffer
 {
     char buffer[4096];
 
     puts(string2);
     read(0, buffer, 4096);
     *strchr(buffer, '\n') = 0;
-    strncpy(string, buffer, 20);
+    strncpy(string, buffer, 20); // <-----------2 writes 20 bytes of buffer into string, but null terminator is not manually added, meaning we could "concat" to adjacent memory
 }
 
 
@@ -52,11 +52,11 @@ void pp(char *string)
     p(buffer2, " - ");
     p(buffer, " - ");
 
-    strcpy(string, buffer2);
+    strcpy(string, buffer2); // <---------------3 string is 42 bytes buffer, and due to 2., will contain both buffers, leaving 2 bytes before overflow
 
     string[strlen(string)] = *a;
 
-    strcat(string, buffer);
+    strcat(string, buffer); // <----------------4 this concat means string will overflow by 18 bytes (20 from buffer - 2 remaining), allowing for a Ret2Libc
 }
 
 int main()
@@ -66,7 +66,7 @@ int main()
     pp(buffer);
     puts(buffer);
 
-    return 0;
+    return 0; // <------------------------------5 overflow overwrite this to point to shellcode running /bin/sh
 }
 ```
 
