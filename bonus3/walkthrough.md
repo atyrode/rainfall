@@ -30,7 +30,7 @@ J'utilise [Dogbolt](https://dogbolt.org/?id=4b673d9a-5976-420c-b0e4-b4225e0977c3
 Je recoupe la sortie de `RetDec` avec l'ASM et en extrait le probable code suivant :
 
 ```c
-int main(int ac, char **av)
+int main(int argc, char **argv)
 {
     char buffer[132];
     FILE *file;
@@ -49,7 +49,7 @@ int main(int ac, char **av)
     fread(buffer + 66, 1, 65, file);
     fclose(file);
 
-    if (strcmp(buffer, av[1]) == 0) // <---------2 making the buffer equates to user input gives shell access
+    if (strcmp(buffer, argv[1]) == 0) // <---------2 making the buffer equates to user input gives shell access
         execl("/bin/sh", "sh", 0); // <----------4 giving "" (empty string) null terminates the index 0, making this comparison (user input =? buffer) be ("" ?= "")
     else
         puts(buffer + 66);

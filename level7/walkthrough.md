@@ -45,7 +45,7 @@ int main(int argc, char **argv)
     struct file *buffer1;
     struct file *buffer2;
 
-    buffer1 = malloc(8)
+    buffer1 = malloc(8);
     buffer1->id = 1;
     buffer1->ptr = malloc(8);
 
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
     buffer2->id = 2;
     buffer2->ptr = malloc(8);
 
-    strcpy(buffer2->ptr, argv[1]); // <---------1 buffer overflow possible here, overflow used to write on buffer2->ptr and make it point to puts@plt
+    strcpy(buffer1->ptr, argv[1]); // <---------1 buffer overflow possible here, overflow used to write on buffer2->ptr and make it point to puts@plt
     strcpy(buffer2->ptr, argv[2]); // <---------2 now it means whatever I write here becomes the new address of puts(), we give it the address of m()
 
     fgets(string, 68, fopen("/home/user/level8/.pass", "r"));

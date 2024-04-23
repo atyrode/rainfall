@@ -15,7 +15,7 @@ int main(int argc, char **argv)
     struct file *buffer1;
     struct file *buffer2;
 
-    buffer1 = malloc(8)
+    buffer1 = malloc(8);
     buffer1->id = 1;
     buffer1->ptr = malloc(8);
 
@@ -23,7 +23,7 @@ int main(int argc, char **argv)
     buffer2->id = 2;
     buffer2->ptr = malloc(8);
 
-    strcpy(buffer2->ptr, argv[1]);
+    strcpy(buffer1->ptr, argv[1]);
     strcpy(buffer2->ptr, argv[2]);
 
     fgets(string, 68, fopen("/home/user/level8/.pass", "r"));

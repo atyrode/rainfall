@@ -52,7 +52,7 @@ void greetuser(char *string)
         break;
     }
 
-    strcat(buffer, string); // <----------------4 the new buffer of 64 appends our 72 bytes buffer so overflows, can be used to Ret2Libc
+    strcat(buffer, string); // <----------------4 the new buffer of 64 appends our 72 bytes buffer so overflows, can be used to Ret2Shellcode
     puts(buffer);
 }
 

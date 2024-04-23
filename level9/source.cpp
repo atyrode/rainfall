@@ -33,10 +33,10 @@ int main(int argc, char **argv)
 	N *five = new N(5);
 	N *six = new N(6);
 
-	N &five = *five
-    N &six = *six;
+	N &fiveref = *five
+    N &sixref = *six;
 
-	five.setAnnotation(argv[1]);
+	fiveref.setAnnotation(argv[1]);
 
-	return five + six;
+	return fiveref + sixref;
 }
